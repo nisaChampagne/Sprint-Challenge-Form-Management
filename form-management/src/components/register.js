@@ -4,7 +4,7 @@ import * as Yup from "yup";
 import axios from "axios";
 
 import CurrentUsers from "./users/currentusers";
-import NewUsers from "./users/newusers";
+import NewUsers from './users/newusers';
 
 function Register({ values, errors, touched, status, isSubmitting }) {
   const [users, setUsers] = useState([]);
@@ -12,7 +12,7 @@ function Register({ values, errors, touched, status, isSubmitting }) {
 
   useEffect(() => {
     if (status) {
-      setUsers([...users, status]);
+      setUsers([...users, values]);
     }
   }, [status]);
 
@@ -31,24 +31,28 @@ function Register({ values, errors, touched, status, isSubmitting }) {
 
   return (
     <div className="register-container">
-      <h1>User Onboarding, GhostRider</h1>
+      <h1>Onboarding</h1>
       <Form className="register-form">
         <Field className="form-input" type='username' name='username' placeholder='User Name' />
           {touched.username && errors.username && <p>{errors.username}</p>}
         <Field className="form-input" type='password' name='password' placeholder='Password' />
           {touched.password && errors.password && <p>{errors.password}</p>}
-        <button className="form-button" type="submit" onClick={setUsers}>Submit</button>
+        <button type="submit" disabled={isSubmitting}>Register</button>
       </Form>
-      <div className="users">
+      <div className='users'>
+      <div className="new-users">
         <h2>New Users</h2>
         {users.map((user, i) => (
           <NewUsers key={i} name={user.username} />
         ))}
+        </div>
+        <div className='current-users'>
         <h2>Current Users</h2>
         {currentUsers.map((current, i) => (
           <CurrentUsers key={i} name={current.username} />
         ))}
       </div>
+    </div>
     </div>
   );
 }
