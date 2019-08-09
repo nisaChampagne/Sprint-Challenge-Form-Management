@@ -3,85 +3,93 @@ import { withFormik, Form, Field } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 
-function Register({ values, errors, touched, status, isSubmitting}) {
-  const [recipes, setRecipes] = useState([]);
+import CurrentUsers from "./users/currentusers";
+import NewUsers from "./users/newusers";
+
+function Register({ values, errors, touched, status, isSubmitting }) {
+  const [users, setUsers] = useState([]);
+  const [currentUsers, setCurrentUsers] = useState();
 
   useEffect(() => {
     if (status) {
-      setRecipes([...status]);
+      setUsers([...users, status]);
     }
   }, [status]);
 
-  return(
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/restricted/users")
+      .then(res => {
+        setCurrentUsers(res.data);
+      })
+      .catch(err => console.log(err.response));
+  }, [])
+
+  if (currentUsers === undefined) {
+    return null
+}
+
+  return (
     <div className="register-container">
+      <h1>User Onboarding, GhostRider</h1>
       <Form className="register-form">
-        <div className="field">
-          <label htmlFor='username'>Username:</label>
-          <Field
-            type="text"
-            name="username"
-            id="username"
-            className="username"
-          />
+        <Field className="form-input" type='username' name='username' placeholder='User Name' />
           {touched.username && errors.username && <p>{errors.username}</p>}
-        </div>
-        <div className="field">
-          <label htmlFor='password'>Password:</label>
-          <Field
-            type="password"
-            name="password"
-            id="password"
-            className="password"
-          />
+        <Field className="form-input" type='password' name='password' placeholder='Password' />
           {touched.password && errors.password && <p>{errors.password}</p>}
-        </div>
-        <button type="submit" disabled={isSubmitting}>Sign Up</button>
+        <button className="form-button" type="submit" onClick={setUsers}>Submit</button>
       </Form>
-      <h2>Recipes</h2>
-      {recipes
-        ? recipes.map(recipe => (
-            <p key={Date.now() + Math.random(10000)} className="recipes">
-              Name : {recipe.name} Course : {recipe.course}
-            </p>
-          ))
-        : null}
+      <div className="users">
+        <h2>New Users</h2>
+        {users.map((user, i) => (
+          <NewUsers key={i} name={user.username} />
+        ))}
+        <h2>Current Users</h2>
+        {currentUsers.map((current, i) => (
+          <CurrentUsers key={i} name={current.username} />
+        ))}
+      </div>
     </div>
   );
 }
 
 const FormikRegister = withFormik({
-    mapPropsToValues({username, password}){
-        return{
-            username: username|| '',
-            password: password|| ''
-        };
-    },
+  mapPropsToValues({ username, password }) {
+    return {
+      username: username || "",
+      password: password || ""
+    };
+  },
 
-    validationSchema: Yup.object().shape({
-        username: Yup.string()
-            .min(5, "At least 5 characters please").required('This is required'),
-        password: Yup.string()
-            .min(6, "At least 6 characters please").required('This is required')
-    }),
+  validationSchema: Yup.object().shape({
+    username: Yup.string()
+      .min(5, "At least 5 characters please")
+      .required("This is required"),
+    password: Yup.string()
+      .min(6, "At least 6 characters please")
+      .required("This is required")
+  }),
 
-    handleSubmit(values, {resetForm, setErrors, setSubmitting, setStatus}){
-        if(values.username === 'GhostRider'){
-            setErrors({ username: 'That is a negative ghostrider, try another one'});
-        } else {
-            axios
-                .post('http://localhost:5000/api/register', values)
-                .then(res =>{
-                    setStatus(res.data);
-                    resetForm();
-                    setSubmitting(false);
-                    window.alert(`Username: ${res.data.username}`);
-                })
-                .catch(err => {
-                    console.log(err, 'RUH ROH');
-                    setSubmitting(false);
-                });
-        }
+  handleSubmit(values, { resetForm, setErrors, setSubmitting, setStatus }) {
+    if (values.username === "GhostRider") {
+      setErrors({ username: "That is a negative ghostrider, try another one" });
+    } else {
+      axios
+        .post("http://localhost:5000/api/register", values)
+        .then(res => {
+          setStatus(res.data);
+          resetForm();
+          setSubmitting(false);
+          window.alert(`Username: ${res.username}`);
+        })
+        .catch(err => {
+          console.log(err, "RUH ROH");
+          setSubmitting(false);
+        });
     }
+  }
 })(Register);
 
 export default FormikRegister;
+
+export const subtract = (num1, num2) => num1 - num2;
